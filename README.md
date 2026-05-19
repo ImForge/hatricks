@@ -188,7 +188,3 @@ hatricks/
 - ngrok URLs change every session — update `SERVER_URL` in `App.jsx` each time you restart
 
 ---
-
-## Built By
-
-Shivam Tiwari — a student who wanted a friend that actually exists.
