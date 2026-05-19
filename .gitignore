@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Environment variables — NEVER push these
+server/.env
+
+# Database — personal data stays local
+server/hatricks.db
+
+# Build output
+client/dist/
+
+# OS files
+.DS_Store
+Thumbs.db
