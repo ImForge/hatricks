@@ -1,23 +1,27 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 
-const SERVER_URL = 'https://ca4f-2405-201-303b-8025-451-126-ba14-112d.ngrok-free.app'
+const SERVER_URL = 'http://localhost:3001'
 
 function App() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [conversationId, setConversationId] = useState(() => {
-    return localStorage.getItem('hatricks_conversation_id') || null
-  })
+  const [conversationId, setConversationId] = useState(null)
 
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
 
+  // On app load, check if there's a saved conversation and load it
   useEffect(() => {
-    if (conversationId) loadConversation(conversationId)
+    const savedId = localStorage.getItem('hatricks_conversation_id')
+    if (savedId) {
+      setConversationId(savedId)
+      loadConversation(savedId)
+    }
   }, [])
 
+  // Auto scroll to bottom when messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -42,15 +46,16 @@ function App() {
     setInput('')
     setIsLoading(true)
 
-    // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
     }
 
     try {
+      const currentId = localStorage.getItem('hatricks_conversation_id')
+
       const response = await axios.post(`${SERVER_URL}/chat`, {
         messages: updatedMessages,
-        conversationId,
+        conversationId: currentId,
       })
 
       setMessages(prev => [...prev, {
@@ -58,7 +63,7 @@ function App() {
         content: response.data.reply
       }])
 
-      if (!conversationId) {
+      if (!currentId && response.data.conversationId) {
         const newId = response.data.conversationId
         setConversationId(newId)
         localStorage.setItem('hatricks_conversation_id', newId)
@@ -82,7 +87,6 @@ function App() {
     }
   }
 
-  // Auto resize textarea as user types
   const handleInput = (e) => {
     setInput(e.target.value)
     e.target.style.height = 'auto'
@@ -97,7 +101,6 @@ function App() {
 
   return (
     <>
-      {/* Inject global styles and animations */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500&display=swap');
 
@@ -115,7 +118,6 @@ function App() {
           flex-direction: column;
         }
 
-        /* Ember glow at top of screen */
         body::before {
           content: '';
           position: fixed;
@@ -126,24 +128,20 @@ function App() {
           z-index: 0;
         }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #2a1a0a; border-radius: 2px; }
 
-        /* Typing animation */
         @keyframes flicker {
           0%, 60%, 100% { opacity: 0.2; transform: scale(0.8); }
           30% { opacity: 1; transform: scale(1.3); }
         }
 
-        /* Avatar pulse — Hatricks is alive */
         @keyframes pulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(200,120,48,0.3); }
           50% { box-shadow: 0 0 0 6px rgba(200,120,48,0); }
         }
 
-        /* Message fade in */
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
@@ -157,38 +155,28 @@ function App() {
         textarea:focus { outline: none; border-color: #5a3510 !important; }
       `}</style>
 
-      {/* ── MAIN CONTAINER ── */}
       <div style={s.container}>
 
-        {/* ── HEADER ── */}
+        {/* HEADER */}
         <div style={s.header}>
           <div style={s.headerLeft}>
-
-            {/* Hagrid avatar with online dot */}
             <div style={s.avatarWrap}>
-              <img
-                src="/hatricks.png"
-                alt="Hatricks"
-                style={s.avatarImg}
-              />
+              <img src="/hatricks.png" alt="Hatricks" style={s.avatarImg} />
               <div style={s.onlineDot} />
             </div>
-
             <div style={s.nameBlock}>
               <span style={s.nameMain}>HATRICKS</span>
               <span style={s.nameSub}>always here • your friend</span>
             </div>
           </div>
-
           <button onClick={newConversation} style={s.newBtn}>
             new chat
           </button>
         </div>
 
-        {/* ── CHAT AREA ── */}
+        {/* CHAT AREA */}
         <div style={s.chatArea}>
 
-          {/* Empty state */}
           {messages.length === 0 && (
             <div style={s.emptyState}>
               <img src="/hatricks.png" alt="Hatricks" style={s.emptyAvatar} />
@@ -197,7 +185,6 @@ function App() {
             </div>
           )}
 
-          {/* Messages */}
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -207,12 +194,10 @@ function App() {
                 justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
               }}
             >
-              {/* Hatricks avatar on his messages */}
               {msg.role === 'assistant' && (
                 <img src="/hatricks.png" alt="H" style={s.msgAvatar} />
               )}
 
-              {/* Message bubble */}
               <div style={{
                 ...s.bubble,
                 ...(msg.role === 'user' ? s.bubbleUser : s.bubbleHatricks),
@@ -220,14 +205,12 @@ function App() {
                 {msg.content}
               </div>
 
-              {/* User avatar on user messages */}
               {msg.role === 'user' && (
                 <img src="/me.png" alt="You" style={s.msgAvatarUser} />
               )}
             </div>
           ))}
 
-          {/* Typing indicator */}
           {isLoading && (
             <div style={s.msgRow} className="msg-animate">
               <img src="/hatricks.png" alt="H" style={s.msgAvatar} />
@@ -244,11 +227,9 @@ function App() {
           <div ref={bottomRef} />
         </div>
 
-        {/* ── INPUT AREA ── */}
+        {/* INPUT AREA */}
         <div style={s.inputArea}>
-          {/* User's own avatar next to input */}
           <img src="/me.png" alt="You" style={s.inputAvatar} />
-
           <textarea
             ref={textareaRef}
             style={s.input}
@@ -259,7 +240,6 @@ function App() {
             rows={1}
             disabled={isLoading}
           />
-
           <button
             style={{
               ...s.sendBtn,
@@ -278,7 +258,6 @@ function App() {
   )
 }
 
-// ── STYLES ──
 const s = {
   container: {
     height: '100vh',
@@ -289,8 +268,6 @@ const s = {
     position: 'relative',
     zIndex: 1,
   },
-
-  // Header
   header: {
     padding: '12px 20px',
     borderBottom: '1px solid #1e1408',
@@ -305,8 +282,6 @@ const s = {
     alignItems: 'center',
     gap: '12px',
   },
-
-  // Hagrid avatar in header
   avatarWrap: {
     position: 'relative',
     width: '42px',
@@ -332,7 +307,6 @@ const s = {
     border: '2px solid #0a0804',
     boxShadow: '0 0 6px #4ade8088',
   },
-
   nameBlock: {
     display: 'flex',
     flexDirection: 'column',
@@ -350,7 +324,6 @@ const s = {
     color: '#4a3010',
     letterSpacing: '0.5px',
   },
-
   newBtn: {
     fontSize: '11px',
     color: '#4a3010',
@@ -362,8 +335,6 @@ const s = {
     letterSpacing: '0.5px',
     fontFamily: "'Inter', sans-serif",
   },
-
-  // Chat area
   chatArea: {
     flex: 1,
     overflowY: 'auto',
@@ -372,8 +343,6 @@ const s = {
     flexDirection: 'column',
     gap: '16px',
   },
-
-  // Empty state
   emptyState: {
     flex: 1,
     display: 'flex',
@@ -404,15 +373,11 @@ const s = {
     color: '#4a3010',
     letterSpacing: '1px',
   },
-
-  // Message rows
   msgRow: {
     display: 'flex',
     alignItems: 'flex-end',
     gap: '10px',
   },
-
-  // Hatricks message avatar
   msgAvatar: {
     width: '32px',
     height: '32px',
@@ -422,8 +387,6 @@ const s = {
     border: '1.5px solid #5a3510',
     flexShrink: 0,
   },
-
-  // User message avatar
   msgAvatarUser: {
     width: '32px',
     height: '32px',
@@ -432,8 +395,6 @@ const s = {
     border: '1.5px solid #3a2a40',
     flexShrink: 0,
   },
-
-  // Bubbles
   bubble: {
     maxWidth: '72%',
     padding: '11px 16px',
@@ -456,8 +417,6 @@ const s = {
     borderBottomRightRadius: '4px',
     color: '#e8d0a8',
   },
-
-  // Typing dots
   typingDots: {
     display: 'flex',
     gap: '5px',
@@ -472,8 +431,6 @@ const s = {
     display: 'inline-block',
     animation: 'flicker 1.4s infinite',
   },
-
-  // Input area
   inputArea: {
     padding: '12px 20px',
     borderTop: '1px solid #1a1008',
