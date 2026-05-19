@@ -2,7 +2,7 @@
 
 A personal AI companion that knows you, remembers you, and grows with you. Not a chatbot. A friend.
 
-Inspired by the loyalty and warmth of Hagrid from Harry Potter — Hatricks is always there, never judges, and tells you the truth even when you don't want to hear it.
+Inspired by the loyalty and warmth of Hagrid from Harry Potter Hatricks is always there, never judges, and tells you the truth even when you don't want to hear it.
 
 ---
 
