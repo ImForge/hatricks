@@ -188,3 +188,5 @@ hatricks/
 - ngrok URLs change every session — update `SERVER_URL` in `App.jsx` each time you restart
 
 ---
+
+WORK ON HOLD CUZ EXAMSSSS!!!
